@@ -32,12 +32,29 @@ export default NextAuth({
       },
       async authorize(credentials, req) {
 
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.username,
-            }
-          })
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.username,
+          }
+        })
 
+        
+          if (!user.password) {
+            throw new Error("Account have to login with social account.")
+          }
+
+          
+            const isMatch = await bcrypt.compare(credentials.password, user.password)
+            console.log(isMatch)
+            if (!isMatch) {
+              throw new Error("Password Incorrect.");
+            }
+          
+          
+
+          // if (!user.emailVerified) {
+          //   throw new Error("Success! Check your email.");
+          // }
         if (user) {
           return {
             id: user.id,
@@ -49,7 +66,7 @@ export default NextAuth({
         }
 
 
-        
+
 
 
         // const res = await prisma.user.findUnique({
