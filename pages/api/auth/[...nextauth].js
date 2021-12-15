@@ -1,7 +1,6 @@
 import NextAuth from "next-auth"
 import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import Auth0Provider from "next-auth/providers/auth0"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { PrismaClient } from "@prisma/client"
 import bcrypt from 'bcryptjs'
@@ -18,11 +17,6 @@ export default NextAuth({
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET
-    }),
-    Auth0Provider({
-      clientId: process.env.AUTH0_CLIENT_ID,
-      clientSecret: process.env.AUTH0_CLIENT_SECRET,
-      issuer: process.env.AUTH0_ISSUER
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -45,7 +39,7 @@ export default NextAuth({
 
           
             const isMatch = await bcrypt.compare(credentials.password, user.password)
-            console.log(isMatch)
+            
             if (!isMatch) {
               throw new Error("Password Incorrect.");
             }
@@ -55,11 +49,14 @@ export default NextAuth({
           // if (!user.emailVerified) {
           //   throw new Error("Success! Check your email.");
           // }
+          console.log(user)
         if (user) {
+          
           return {
             id: user.id,
             name: user.name,
             email: user.email,
+            role: user.role,
           };
         } else {
           return null
@@ -150,8 +147,23 @@ export default NextAuth({
   callbacks: {
     // async signIn({ user, account, profile, email, credentials }) { return true },
     // async redirect({ url, baseUrl }) { return baseUrl },
-    // async session({ session, token, user }) { return session },
+    // async session({ session, token, user }) { 
+    //   session.token = token
+    //   session.role = user.role
+    //   return session 
+    // },
     // async jwt({ token, user, account, profile, isNewUser }) { return token }
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.role = user.role
+      }
+  
+      return token
+    },
+    session: async ({ session, token }) => {
+      session.user.role = token.role
+      return session
+    },
   },
 
   // Events are useful for logging
