@@ -16,7 +16,7 @@ export default function Home() {
     return (
       <>
         Signed in as {session.user?.email} <br />
-        User permissions: {session.user?.permissions}
+        User permissions: {session.user?.role}
         <button type="button" onClick={() => signOut()}>Sign Out</button>
         <Link href="/protectedPage"><a>Go to protected page.</a></Link>
       </>
